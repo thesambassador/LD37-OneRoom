@@ -9,6 +9,8 @@ public class LevelGrid : MonoBehaviour {
     public ScaledPlayspace wallPrefab;
 
     public ScaledPlayspace startingSpace;
+    public ScaledPlayspace activeRoom;
+    public ScaledPlayspace calibrationSpace;
 
     public float xSpacing = 4;
     public float zSpacing = 3;
@@ -22,14 +24,19 @@ public class LevelGrid : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        print("level initializing");
         PopulateGrid();
         SnapSpacesTogether();
-        if (playArea == null)
-            playArea = FindObjectOfType<SteamVR_PlayArea>();
 
-        player = FindObjectOfType<PlayerTeleporter>();
+        playArea = PlayerRig.playArea;
+        player = PlayerRig.playerTeleporter;
+        PlayerRig.currentLevel = this;
+        PlayerRig.playerTeleporter.currentLevel = this;
 
-        player.SetRoom(startingSpace);
+        print("player selected is " + player.gameObject.name);
+
+        PutPlayerInCorrectRoom();
+        
 	}
 	
 	// Update is called once per frame
@@ -67,7 +74,7 @@ public class LevelGrid : MonoBehaviour {
             space.gridX = x;
             space.gridZ = z;
             space.levelGridRef = this;
-            if (space.containsStartingPoint)
+            if (space.startingLocation != null)
             {
                 startingSpace = space;
             }
@@ -81,6 +88,7 @@ public class LevelGrid : MonoBehaviour {
                 if (gridOfPlayspaces[x, z] == null)
                 {
                     ScaledPlayspace space = Instantiate(wallPrefab);
+                    space.transform.parent = this.transform;
                     gridOfPlayspaces[x, z] = space;
                     space.levelGridRef = this;
                     space.gridX = x;
@@ -99,11 +107,8 @@ public class LevelGrid : MonoBehaviour {
             {
                 ScaledPlayspace space = gridOfPlayspaces[x, z];
 
-                if (space == null)
-                {
-
-
-                }
+                space.UpdateRelativePositionScale();
+                space.SetCollisionBoxActive(false);
 
                 if (space != null)
                 {
@@ -115,5 +120,68 @@ public class LevelGrid : MonoBehaviour {
                 }
             }
         }
+        calibrationSpace.UpdateRelativePositionScale();
     }
+
+    void PutPlayerInCorrectRoom()
+    {
+        Vector2 playerPos = new Vector2(player.playerHead.localPosition.x, player.playerHead.localPosition.z);
+        Vector2 startingPos = new Vector2(startingSpace.startingLocation.transform.localPosition.x, startingSpace.startingLocation.transform.localPosition.z);
+
+        if (startingSpace != null && Vector2.Distance(playerPos, startingPos) <= startingSpace.startingLocation.radius)
+        {
+            player.SetRoom(startingSpace);
+            SetRoomActive(startingSpace);
+        }
+        else
+        {
+            
+            player.SetRoom(calibrationSpace);
+           
+        }
+        
+    }
+
+
+    public void PutPlayerInStartingRoom()
+    {
+        player.SetRoom(startingSpace);
+    }
+
+    public void SetRoomActive(ScaledPlayspace room)
+    {
+        print(room.gridX + ", " + room.gridZ);
+        //first, turn all rooms to the original space's collision boxes off
+        if (activeRoom != null && activeRoom.gridX != -1)
+        {
+            int ax = activeRoom.gridX;
+            int az = activeRoom.gridZ;
+
+            if (ax - 1 >= 0)
+                gridOfPlayspaces[ax-1, az].SetCollisionBoxActive(false);
+            if (ax + 1 < gridOfPlayspaces.GetLength(0))
+                gridOfPlayspaces[ax + 1, az].SetCollisionBoxActive(false);
+            if (az - 1 >= 0)
+                gridOfPlayspaces[ax, az - 1].SetCollisionBoxActive(false);
+            if (az + 1 < gridOfPlayspaces.GetLength(1))
+                gridOfPlayspaces[ax, az + 1].SetCollisionBoxActive(false);
+        }
+        activeRoom = room;
+        room.SetRoomActive();
+
+        int x = activeRoom.gridX;
+        int z = activeRoom.gridZ;
+        if (x != -1)
+        {
+            if (x - 1 >= 0)
+                gridOfPlayspaces[x - 1, z].SetCollisionBoxActive(true);
+            if (x + 1 < gridOfPlayspaces.GetLength(0))
+                gridOfPlayspaces[x + 1, z].SetCollisionBoxActive(true);
+            if (z - 1 >= 0)
+                gridOfPlayspaces[x, z - 1].SetCollisionBoxActive(true);
+            if (z + 1 < gridOfPlayspaces.GetLength(1))
+                gridOfPlayspaces[x, z + 1].SetCollisionBoxActive(true);
+        }
+    }
+
 }

@@ -16,4 +16,9 @@ public class RoomRelativeObject : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    public virtual void UpdateForPlayspace()
+    {
+
+    }
 }

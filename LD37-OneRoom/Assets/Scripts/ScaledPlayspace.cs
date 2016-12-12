@@ -16,7 +16,7 @@ public class ScaledPlayspace : MonoBehaviour {
     public int gridX = -1;
     public int gridZ = -1;
 
-    public bool containsStartingPoint = false;
+    public StartingSpace startingLocation;
 
     private bool _playerInSpace = false;
     public bool playerInSpace { 
@@ -24,7 +24,6 @@ public class ScaledPlayspace : MonoBehaviour {
         set
         {
             _playerInSpace = value;
-            areaCollider.enabled = !value;
         }
     }
 
@@ -93,6 +92,39 @@ public class ScaledPlayspace : MonoBehaviour {
     public void UnHighlight()
     {
         floorRenderer.material.color = Color.grey;
+    }
+
+    public void UpdateRelativePositionScale()
+    {
+        RoomRelativeObject[] allObjectsInRoom = GetComponentsInChildren<RoomRelativeObject>();
+        foreach (RoomRelativeObject obj in allObjectsInRoom)
+        {
+            obj.UpdateForPlayspace();
+        }
+        Vector3 newSize = new Vector3(ScaledPlayspace.playSpace.width, 1.25f, ScaledPlayspace.playSpace.length);
+
+        if(areaCollider != null)
+            areaCollider.size = newSize;
+
+    }
+
+    //when player teleports to this one
+    public void SetRoomActive()
+    {
+        
+        playerInSpace = true;
+        SetCollisionBoxActive(false);
+        //set only adjacent rooms coliders to be active
+    }
+
+    public void SetCollisionBoxActive(bool val)
+    {
+        if (gridX == 1 && gridZ == 2)
+        {
+            print("this one");
+        }
+        if(areaCollider != null)
+            areaCollider.enabled = val;
     }
 
 	

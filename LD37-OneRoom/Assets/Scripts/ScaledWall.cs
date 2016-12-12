@@ -17,6 +17,11 @@ public class ScaledWall : RoomRelativeObject {
     [Range(0, 1.0f)]
     public float height = .5f;
 
+    [Range(0, 1.0f)]
+    public float heightOffGround = 0;
+
+    
+
 	// Use this for initialization
 	void Start () {
 		
@@ -59,7 +64,7 @@ public class ScaledWall : RoomRelativeObject {
             Vector3 newPos = roomParams.bottomLeft;
             newPos.x += (left + ((right - left) / 2)) * roomParams.width;
             newPos.z += (bottom + ((top - bottom) / 2)) * roomParams.length;
-            newPos.y = (height * roomParams.roomHeight) / 2;
+            newPos.y = (height * roomParams.roomHeight) / 2 + heightOffGround * roomParams.roomHeight;
 
             transform.localPosition = newPos;
 
@@ -81,5 +86,10 @@ public class ScaledWall : RoomRelativeObject {
 
         if (top < 0) top = 0;
         else if (top > 1) top = 1;
+    }
+
+    public override void UpdateForPlayspace()
+    {
+        UpdateDimensions();
     }
 }

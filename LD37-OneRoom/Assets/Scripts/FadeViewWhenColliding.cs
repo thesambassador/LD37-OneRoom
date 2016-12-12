@@ -11,6 +11,8 @@ public class FadeViewWhenColliding : MonoBehaviour {
     public float startFadeDist = .05f;
     public float fullFadeDist = .15f;
 
+    public bool isFaded;
+
 	// Use this for initialization
 	void Start () {
         headsetFade = GetComponent<VRTK_HeadsetFade>();
@@ -33,9 +35,12 @@ public class FadeViewWhenColliding : MonoBehaviour {
             fadeCol.a = normDist;
 
             headsetFade.Fade(fadeCol, 0);
+
+            isFaded = true;
         }
         else
         {
+            isFaded = false;
             headsetFade.Unfade(0);
         }
 
